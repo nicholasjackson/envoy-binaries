@@ -18,6 +18,7 @@ jobs:
           echo "::set-output name=current::$CURRENT_VERSION"
     outputs:
       version: ${{steps.version.outputs.version}}
+      current: ${{steps.version.outputs.current}}
           
   amd64:
     needs: setup
