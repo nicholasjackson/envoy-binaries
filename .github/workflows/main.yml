@@ -28,7 +28,7 @@ jobs:
       - name: Download binary
         run: |
           docker create --name envoy envoyproxy/envoy:${{needs.setup.outputs.version}}
-          docker cp envoy:/usr/local/bin/envoy envoy_amd64
+          docker cp envoy:/usr/local/bin/envoy binaries/envoy_amd64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
@@ -46,7 +46,7 @@ jobs:
       - name: Download binary
         run: |
           docker create --name envoy envoyproxy/envoy:${{needs.setup.outputs.version}}
-          docker cp envoy:/usr/local/bin/envoy envoy_arm64
+          docker cp envoy:/usr/local/bin/envoy binaries/envoy_arm64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
