@@ -19,12 +19,11 @@ jobs:
           fi
 
           docker create --name envoy envoyproxy/envoy:$ENVOY_VERSION
-          docker cp envoy:/usr/local/bin/envoy envoy
+          docker cp envoy:/usr/local/bin/envoy envoy_amd64
 
           echo "::set-output name=version::$ENVOY_VERSION"
       - name: release
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: "envoy"
-          tag: ${{steps.download.outputs.page}}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          files: envoy_amd64
+          tag_name: ${{steps.download.output.version}}
