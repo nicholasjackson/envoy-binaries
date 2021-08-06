@@ -7,7 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: download
+      - name: Download envoy binary
+        id: download
         run: |-
           # Get latest envoy version
           ENVOY_VERSION=$(wget -q https://registry.hub.docker.com/v1/repositories/envoyproxy/envoy/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | grep v | grep -v docs | sort -r --version-sort | head -n 1)
@@ -25,12 +26,12 @@ jobs:
       - name: echo
         run: |
           echo "${{steps.download.outputs.version}}"
-      - name: tag
+      - name: Tag release
         uses: mathieudutour/github-tag-action@v5.6
         with:
           custom_tag: ${{steps.download.outputs.version}}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: release
+      - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           files: envoy_amd64
