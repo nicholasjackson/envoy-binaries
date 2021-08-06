@@ -28,14 +28,13 @@ jobs:
       - name: Download binary
         run: |
           docker create --name envoy envoyproxy/envoy:${{needs.setup.outputs.version}}
-          docker cp envoy:/usr/local/bin/envoy binaries/envoy_amd64
+          docker cp envoy:/usr/local/bin/envoy envoy_amd64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: |
-            binaries/envoy_amd64
+          path: envoy_amd64
 
   arm64:
     needs: setup
@@ -46,14 +45,13 @@ jobs:
       - name: Download binary
         run: |
           docker create --name envoy envoyproxy/envoy:${{needs.setup.outputs.version}}
-          docker cp envoy:/usr/local/bin/envoy binaries/envoy_arm64
+          docker cp envoy:/usr/local/bin/envoy envoy_arm64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: |
-            binaries/envoy_arm64
+          path: envoy_arm64
 
   release:
     needs: setup
@@ -71,12 +69,11 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: binaries
-          path: binaries/
 
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            binaries/envoy_amd64
-            binaries/envoy_arm64
+            envoy_amd64
+            envoy_arm64
           tag_name: ${{needs.setup.outputs.version}}
