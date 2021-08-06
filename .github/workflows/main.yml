@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Download amd64 binary
+      - name: Download binary
         run: |
           docker create --name envoy envoyproxy/envoy:${{needs.setup.outputs.version}}
           docker cp envoy:/usr/local/bin/envoy envoy_amd64
@@ -36,6 +36,24 @@ jobs:
           name: binaries
           path: |
             binaries/envoy_amd64
+
+  arm64:
+    needs: setup
+    if: ${{needs.setup.outputs.version != needs.setup.outputs.current}}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download binary
+        run: |
+          docker create --name envoy envoyproxy/envoy:${{needs.setup.outputs.version}}
+          docker cp envoy:/usr/local/bin/envoy envoy_arm64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: |
+            binaries/envoy_arm64
 
   release:
     needs: setup
@@ -59,4 +77,5 @@ jobs:
         with:
           files: |
             binaries/envoy_amd64
+            binaries/envoy_arm64
           tag_name: ${{needs.setup.outputs.version}}
