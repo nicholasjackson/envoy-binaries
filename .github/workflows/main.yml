@@ -21,7 +21,7 @@ jobs:
           
   amd64:
     needs: setup
-    if: ${{needs.setup.outputs.version != needs.setup.outputs.current}}
+    if: needs.setup.outputs.version != needs.setup.outputs.current
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -39,7 +39,7 @@ jobs:
 
   arm64:
     needs: setup
-    if: ${{needs.setup.outputs.version != needs.setup.outputs.current}}
+    if: needs.setup.outputs.version != needs.setup.outputs.current
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
@@ -57,7 +57,6 @@ jobs:
 
   release:
     needs: [setup, amd64, arm64]
-    if: ${{needs.setup.outputs.version != needs.setup.outputs.current}}
     runs-on: ubuntu-latest
     steps:
       - name: Tag release
