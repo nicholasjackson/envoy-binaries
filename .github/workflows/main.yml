@@ -54,7 +54,7 @@ jobs:
           path: envoy_arm64
 
   release:
-    needs: setup
+    needs: [setup, amd64, arm64]
     if: ${{needs.setup.outputs.version != needs.setup.outputs.current}}
     runs-on: ubuntu-latest
     steps:
