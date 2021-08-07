@@ -63,7 +63,7 @@ jobs:
       - name: Download binary
         run: |
           docker create --name envoy_arm64 envoyproxy/envoy:${{needs.setup.outputs.version}}
-          docker cp envoy_arm64:/usr/local/bin/envoy envoy_arm64
+          docker cp envoy_arm64:/usr/local/bin/envoy envoy
           docker rm envoy_arm64
       
       - name: Zip binary
