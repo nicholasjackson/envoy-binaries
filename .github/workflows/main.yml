@@ -23,7 +23,7 @@ jobs:
         id: version
         uses: ashley-taylor/regex-property-action@v1.0
         with:
-          value: ${{steps.version.outputs.version}}
+          value: ${{steps.tag.outputs.version}}
           regex: "v"
           replacement: ""
 
