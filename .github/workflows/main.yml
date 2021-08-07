@@ -18,7 +18,17 @@ jobs:
 
           echo "::set-output name=version::$ENVOY_VERSION"
           echo "::set-output name=current::$CURRENT_VERSION"
+
+      - name: Remove v in Tag
+        id: semver
+        uses: ashley-taylor/regex-property-action@v1.0
+        with:
+          value: ${{steps.version.outputs.version}}
+          regex: "v"
+          replacement: ""
+
     outputs:
+      semver: ${{steps.semver.outputs.value}}
       version: ${{steps.version.outputs.version}}
       current: ${{steps.version.outputs.current}}
           
@@ -31,14 +41,18 @@ jobs:
       - name: Download binary
         run: |
           docker create --name envoy_amd64 envoyproxy/envoy:${{needs.setup.outputs.version}}
-          docker cp envoy_amd64:/usr/local/bin/envoy envoy_amd64
+          docker cp envoy_amd64:/usr/local/bin/envoy envoy
           docker rm envoy_amd64
+      
+      - name: Zip binary
+        run: |
+          zip envoy_${{needs.setup.outputs.version}}_linux_amd64.zip ./envoy
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: envoy_amd64
+          path: envoy_${{needs.setup.outputs.version}}_linux_amd64.zip
 
   arm64:
     needs: setup
@@ -51,12 +65,16 @@ jobs:
           docker create --name envoy_arm64 envoyproxy/envoy:${{needs.setup.outputs.version}}
           docker cp envoy_arm64:/usr/local/bin/envoy envoy_arm64
           docker rm envoy_arm64
+      
+      - name: Zip binary
+        run: |
+          zip envoy_${{needs.setup.outputs.version}}_linux_arm64.zip ./envoy
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: binaries
-          path: envoy_arm64
+          path: envoy_${{needs.setup.outputs.version}}_linux_arm64.zip
 
   release:
     needs: [setup, amd64, arm64]
@@ -78,6 +96,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            envoy_amd64
-            envoy_arm64
+            envoy_${{needs.setup.outputs.version}}_linux_arm64.zip
+            envoy_${{needs.setup.outputs.version}}_linux_amd64.zip
           tag_name: ${{needs.setup.outputs.version}}
