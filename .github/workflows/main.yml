@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Get envoy version
-        id: version
+        id: tag
         run: |-
           # Get latest envoy version
           ENVOY_VERSION=$(wget -q https://registry.hub.docker.com/v1/repositories/envoyproxy/envoy/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | grep v | grep -v docs | sort -r --version-sort | head -n 1)
@@ -20,7 +20,7 @@ jobs:
           echo "::set-output name=current::$CURRENT_VERSION"
 
       - name: Remove v in Tag
-        id: semver
+        id: version
         uses: ashley-taylor/regex-property-action@v1.0
         with:
           value: ${{steps.version.outputs.version}}
@@ -28,9 +28,9 @@ jobs:
           replacement: ""
 
     outputs:
-      semver: ${{steps.semver.outputs.value}}
-      version: ${{steps.version.outputs.version}}
-      current: ${{steps.version.outputs.current}}
+      version: ${{steps.version.outputs.value}}
+      tag: ${{steps.tag.outputs.version}}
+      current: ${{steps.tag.outputs.current}}
           
   amd64:
     needs: setup
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Download binary
         run: |
-          docker create --name envoy_amd64 envoyproxy/envoy:${{needs.setup.outputs.version}}
+          docker create --name envoy_amd64 envoyproxy/envoy:${{needs.setup.outputs.tag}}
           docker cp envoy_amd64:/usr/local/bin/envoy envoy
           docker rm envoy_amd64
       
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Download binary
         run: |
-          docker create --name envoy_arm64 envoyproxy/envoy:${{needs.setup.outputs.version}}
+          docker create --name envoy_arm64 envoyproxy/envoy:${{needs.setup.outputs.tag}}
           docker cp envoy_arm64:/usr/local/bin/envoy envoy
           docker rm envoy_arm64
       
@@ -98,4 +98,4 @@ jobs:
           files: |
             envoy_${{needs.setup.outputs.version}}_linux_arm64.zip
             envoy_${{needs.setup.outputs.version}}_linux_amd64.zip
-          tag_name: ${{needs.setup.outputs.version}}
+          tag_name: ${{needs.setup.outputs.tag}}
