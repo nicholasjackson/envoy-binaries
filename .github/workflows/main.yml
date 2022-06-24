@@ -5,6 +5,17 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
+  windows:
+    needs: setup
+    if: needs.setup.outputs.tag != needs.setup.outputs.current
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download binary
+        run: |
+          docker create --name envoy_windows envoyproxy/envoy-windows:v1.21-latest
+          docker rm envoy_windows
+
   setup:
     runs-on: ubuntu-latest
     steps:
@@ -31,7 +42,7 @@ jobs:
       version: ${{steps.version.outputs.value}}
       tag: ${{steps.tag.outputs.version}}
       current: ${{steps.tag.outputs.current}}
-          
+
   amd64:
     needs: setup
     if: needs.setup.outputs.tag != needs.setup.outputs.current
@@ -43,7 +54,7 @@ jobs:
           docker create --name envoy_amd64 envoyproxy/envoy:${{needs.setup.outputs.tag}}
           docker cp envoy_amd64:/usr/local/bin/envoy envoy
           docker rm envoy_amd64
-      
+
       - name: Zip binary
         run: |
           zip envoy_${{needs.setup.outputs.version}}_linux_amd64.zip ./envoy
@@ -65,7 +76,7 @@ jobs:
           docker create --name envoy_arm64 envoyproxy/envoy:${{needs.setup.outputs.tag}}
           docker cp envoy_arm64:/usr/local/bin/envoy envoy
           docker rm envoy_arm64
-      
+
       - name: Zip binary
         run: |
           zip envoy_${{needs.setup.outputs.version}}_linux_arm64.zip ./envoy
@@ -86,7 +97,7 @@ jobs:
           tag_prefix: ""
           custom_tag: ${{needs.setup.outputs.version}}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
