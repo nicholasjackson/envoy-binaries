@@ -6,8 +6,6 @@ on:
 
 jobs:
   windows:
-    needs: setup
-    if: needs.setup.outputs.tag != needs.setup.outputs.current
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
