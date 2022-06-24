@@ -100,7 +100,7 @@ jobs:
           path: C:\envoy_${{needs.setup.outputs.version}}_windows_amd64.zip
 
   release:
-    needs: [setup, amd64, arm64]
+    needs: [setup, amd64, arm64, windows]
     runs-on: ubuntu-latest
     steps:
       - name: Tag release
