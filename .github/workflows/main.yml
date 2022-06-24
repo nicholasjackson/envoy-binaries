@@ -12,7 +12,18 @@ jobs:
       - name: Download binary
         run: |
           docker create --name envoy_windows envoyproxy/envoy-windows:v1.21-latest
+          docker cp "envoy_windows:C:\Program Files\envoy\envoy.exe" "envoy.exe"
           docker rm envoy_windows
+
+      - name: Zip binary
+        run: |
+          zip envoy_${{needs.setup.outputs.version}}_windows_amd64.zip ./envoy
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: envoy_${{needs.setup.outputs.version}}_windows_amd64.zip
 
   setup:
     runs-on: ubuntu-latest
