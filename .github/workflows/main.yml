@@ -5,25 +5,6 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
-  windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Download binary
-        run: |
-          docker create --name envoy_windows envoyproxy/envoy-windows:v1.21-latest
-          docker cp "envoy_windows:C:\Program Files\envoy\envoy.exe" "C:\envoy.exe"
-          docker rm envoy_windows
-
-      - name: Zip binary
-        run: |
-          Compress-Archive -Path C:\envoy.exe -DestinationPath C:\envoy_1_21_windows_amd64.zip
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: binaries
-          path: C:\envoy_1_21_windows_amd64.zip
 
   setup:
     runs-on: ubuntu-latest
@@ -96,6 +77,28 @@ jobs:
           name: binaries
           path: envoy_${{needs.setup.outputs.version}}_linux_arm64.zip
 
+  windows:
+    needs: setup
+    if: needs.setup.outputs.tag != needs.setup.outputs.current
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download binary
+        run: |
+          docker create --name envoy_windows envoyproxy/envoy-windows:${{needs.setup.outputs.tag}}-latest
+          docker cp "envoy_windows:C:\Program Files\envoy\envoy.exe" "C:\envoy.exe"
+          docker rm envoy_windows
+
+      - name: Zip binary
+        run: |
+          Compress-Archive -Path C:\envoy.exe -DestinationPath C:\envoy_${{needs.setup.outputs.version}}_windows_amd64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: C:\envoy_${{needs.setup.outputs.version}}_windows_amd64.zip
+
   release:
     needs: [setup, amd64, arm64]
     runs-on: ubuntu-latest
@@ -118,4 +121,5 @@ jobs:
           files: |
             envoy_${{needs.setup.outputs.version}}_linux_arm64.zip
             envoy_${{needs.setup.outputs.version}}_linux_amd64.zip
+            envoy_${{needs.setup.outputs.version}}_windows_amd64.zip
           tag_name: ${{needs.setup.outputs.tag}}

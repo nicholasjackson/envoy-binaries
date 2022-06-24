@@ -1,0 +1,1 @@
+]52;c;ICAgIG5lZWRzOiBzZXR1cAogICAgaWY6IG5lZWRzLnNldHVwLm91dHB1dHMudGFnICE9IG5lZWRzLnNldHVwLm91dHB1dHMuY3VycmVudAo= server running on /tmp/tmux-1000/default
