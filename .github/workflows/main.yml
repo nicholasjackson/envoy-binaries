@@ -5,6 +5,7 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
+
   setup:
     runs-on: ubuntu-latest
     steps:
@@ -13,7 +14,7 @@ jobs:
         id: tag
         run: |-
           # Get latest envoy version
-          ENVOY_VERSION=$(wget -q https://registry.hub.docker.com/v1/repositories/envoyproxy/envoy/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | grep v | grep -v docs | sort -r --version-sort | head -n 1)
+          ENVOY_VERSION=$(wget -q https://registry.hub.docker.com/v1/repositories/envoyproxy/envoy-windows/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | grep v | grep -v docs | sort -r --version-sort | head -n 1)
           CURRENT_VERSION=$(curl --silent "https://api.github.com/repos/nicholasjackson/envoy-binaries/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
           echo "::set-output name=version::$ENVOY_VERSION"
@@ -31,7 +32,7 @@ jobs:
       version: ${{steps.version.outputs.value}}
       tag: ${{steps.tag.outputs.version}}
       current: ${{steps.tag.outputs.current}}
-          
+
   amd64:
     needs: setup
     if: needs.setup.outputs.tag != needs.setup.outputs.current
@@ -43,7 +44,7 @@ jobs:
           docker create --name envoy_amd64 envoyproxy/envoy:${{needs.setup.outputs.tag}}
           docker cp envoy_amd64:/usr/local/bin/envoy envoy
           docker rm envoy_amd64
-      
+
       - name: Zip binary
         run: |
           zip envoy_${{needs.setup.outputs.version}}_linux_amd64.zip ./envoy
@@ -65,7 +66,7 @@ jobs:
           docker create --name envoy_arm64 envoyproxy/envoy:${{needs.setup.outputs.tag}}
           docker cp envoy_arm64:/usr/local/bin/envoy envoy
           docker rm envoy_arm64
-      
+
       - name: Zip binary
         run: |
           zip envoy_${{needs.setup.outputs.version}}_linux_arm64.zip ./envoy
@@ -76,8 +77,30 @@ jobs:
           name: binaries
           path: envoy_${{needs.setup.outputs.version}}_linux_arm64.zip
 
+  windows:
+    needs: setup
+    if: needs.setup.outputs.tag != needs.setup.outputs.current
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download binary
+        run: |
+          docker create --name envoy_windows envoyproxy/envoy-windows:${{needs.setup.outputs.tag}}
+          docker cp "envoy_windows:C:\Program Files\envoy\envoy.exe" "C:\envoy.exe"
+          docker rm envoy_windows
+
+      - name: Zip binary
+        run: |
+          Compress-Archive -Path C:\envoy.exe -DestinationPath C:\envoy_${{needs.setup.outputs.version}}_windows_amd64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: C:\envoy_${{needs.setup.outputs.version}}_windows_amd64.zip
+
   release:
-    needs: [setup, amd64, arm64]
+    needs: [setup, amd64, arm64, windows]
     runs-on: ubuntu-latest
     steps:
       - name: Tag release
@@ -86,7 +109,7 @@ jobs:
           tag_prefix: ""
           custom_tag: ${{needs.setup.outputs.version}}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
@@ -98,4 +121,5 @@ jobs:
           files: |
             envoy_${{needs.setup.outputs.version}}_linux_arm64.zip
             envoy_${{needs.setup.outputs.version}}_linux_amd64.zip
+            envoy_${{needs.setup.outputs.version}}_windows_amd64.zip
           tag_name: ${{needs.setup.outputs.tag}}
