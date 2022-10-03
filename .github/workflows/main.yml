@@ -1,5 +1,6 @@
 name: Build
 on:
+  push:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
@@ -14,7 +15,7 @@ jobs:
         id: tag
         run: |-
           # Get latest envoy version
-          ENVOY_VERSION=$(wget -q https://registry.hub.docker.com/v1/repositories/envoyproxy/envoy-windows/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' | grep v | grep -v docs | sort -r --version-sort | head -n 1)
+          ENVOY_VERSION=$(curl -s https://registry.hub.docker.com/v2/repositories/envoyproxy/envoy-windows/tags  | jq -r '.results[]["name"]' | sort -V -r | head -n 1)
           CURRENT_VERSION=$(curl --silent "https://api.github.com/repos/nicholasjackson/envoy-binaries/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
           echo "::set-output name=version::$ENVOY_VERSION"
